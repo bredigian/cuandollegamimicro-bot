@@ -1,12 +1,21 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+
+import { ScraperService } from './scraper/scraper.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly scraperService: ScraperService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  async runScraper() {
+    const data = await this.scraperService.scrapeData({
+      url: process.env.URL_TO_SCRAP!,
+      lineCode: 169,
+      stopId: 'LP1736',
+    });
+
+    // Send to Telegram
+
+    return data;
   }
 }

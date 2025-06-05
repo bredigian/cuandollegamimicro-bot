@@ -1,0 +1,44 @@
+import { Injectable } from '@nestjs/common';
+import { chromium } from '@playwright/test';
+
+interface ScrapeDataProps {
+  url: string;
+  lineCode: number;
+  stopId: string;
+}
+
+@Injectable()
+export class ScraperService {
+  constructor() {}
+
+  async scrapeData({ url, lineCode, stopId }: ScrapeDataProps) {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+
+    const URL = `${url}?codLine=${lineCode}&idParada=${stopId}`;
+
+    await page.goto(URL);
+
+    try {
+      await page.waitForSelector('#arribosContainer', { timeout: 5000 });
+    } catch {
+      return { error: 'No se encontraron datos de arribos.' };
+    }
+
+    const buses = await page.$$eval('.proximo-arribo', (rows) => {
+      return rows.map((row) => {
+        const line =
+          row.querySelector('.lineaClass')?.textContent?.trim() || '';
+        const description =
+          row.querySelector('.bandera')?.textContent?.trim() || '';
+
+        const remainingArrivalTime =
+          row.querySelector('#tiempoRestanteArribo')?.textContent?.trim() || '';
+
+        return { line, description, remainingArrivalTime };
+      });
+    });
+
+    return buses;
+  }
+}

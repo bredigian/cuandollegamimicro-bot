@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { chromium } from '@playwright/test';
 
 interface ScrapeDataProps {
-  url: string;
   lineCode: number;
   stopId: string;
 }
@@ -13,14 +12,13 @@ export class ScraperService {
   constructor() {}
 
   async scrapeData({
-    url,
     lineCode,
     stopId,
   }: ScrapeDataProps): Promise<BusArrivalData[] | { error: string }[]> {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
-    const URL = `${url}?codLine=${lineCode}&idParada=${stopId}`;
+    const URL = `${process.env.URL_TO_SCRAP!}?codLinea=${lineCode}&idParada=${stopId}`;
 
     await page.goto(URL);
 
@@ -44,6 +42,6 @@ export class ScraperService {
       });
     });
 
-    return buses;
+    return buses.slice(0, 4); // Limit to 4 buses
   }
 }

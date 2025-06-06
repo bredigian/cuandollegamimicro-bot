@@ -1,0 +1,6 @@
+export enum STOPS {
+  L_214_DIAG73Y10 = 'LP1438',
+  L_202_7Y56 = 'LP2035',
+
+  L_202_60Y125 = 'BE5134',
+}

@@ -46,6 +46,10 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Suscribers file
+/db
+suscribers.json
+
 # Runtime data
 pids
 *.pid

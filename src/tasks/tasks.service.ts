@@ -15,24 +15,21 @@ export class TasksService {
     private telegramService: TelegramService,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
-  async handleBusTask() {
-    this.logger.debug('Running cron job...');
-
+  private async handleBusTask(lineCode: BUSES, stopId: STOPS) {
     try {
       const data = await this.scraperService.scrapeData({
-        lineCode: BUSES.L_202,
-        stopId: STOPS.L_202_7Y56,
+        lineCode,
+        stopId,
       });
 
-      const stopValue = STOPS.L_202_7Y56;
-      const stopName = Object.keys(STOPS).find(
-        (key) => STOPS[key as keyof typeof STOPS] === stopValue,
-      );
-
-      const lineValue = BUSES.L_202;
+      const lineValue = lineCode;
       const lineName = Object.keys(BUSES).find(
         (key) => BUSES[key as keyof typeof BUSES] === lineValue,
+      );
+
+      const stopValue = stopId;
+      const stopName = Object.keys(STOPS).find(
+        (key) => STOPS[key as keyof typeof STOPS] === stopValue,
       );
 
       await this.telegramService.sendPreviewListMessage(
@@ -45,6 +42,48 @@ export class TasksService {
     } catch (error) {
       this.logger.error(
         'An error occurred while scraping and sending bus data in the cron job.\n',
+        error,
+      );
+    }
+  }
+
+  // 214 (to UTN), 16:00 - 18:59, Monday to Friday
+  @Cron('0 16-18 * * 1-5')
+  async handleBusTask214() {
+    this.logger.log('Handling bus 214 task...');
+    try {
+      await this.handleBusTask(BUSES.L_214, STOPS.L_214_DIAG73Y10);
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while handling the bus 214 task.',
+        error,
+      );
+    }
+  }
+
+  // 202 (to UTN), 16:00 - 19:59, Monday to Friday
+  @Cron('0 16-19 * * 1-5')
+  async handleBusTask202ToUTN() {
+    this.logger.log('Handling bus 202 (to UTN) task...');
+    try {
+      await this.handleBusTask(BUSES.L_202, STOPS.L_202_7Y56);
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while handling the bus 202 (to UTN) task.',
+        error,
+      );
+    }
+  }
+
+  // 202 (to La Plata), 16:00 - 19:59, Monday to Friday
+  @Cron('0 20-23 * * 1-5')
+  async handleBusTask202ToLaPlata() {
+    this.logger.log('Handling bus 202 (to La Plata) task...');
+    try {
+      await this.handleBusTask(BUSES.L_202, STOPS.L_202_60Y125);
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while handling the bus 202 (to La Plata) task.',
         error,
       );
     }

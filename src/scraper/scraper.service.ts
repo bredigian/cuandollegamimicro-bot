@@ -1,3 +1,4 @@
+import { BusArrivalData } from 'src/types/bus.types';
 import { Injectable } from '@nestjs/common';
 import { chromium } from '@playwright/test';
 
@@ -11,7 +12,11 @@ interface ScrapeDataProps {
 export class ScraperService {
   constructor() {}
 
-  async scrapeData({ url, lineCode, stopId }: ScrapeDataProps) {
+  async scrapeData({
+    url,
+    lineCode,
+    stopId,
+  }: ScrapeDataProps): Promise<BusArrivalData[] | { error: string }[]> {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
@@ -22,7 +27,7 @@ export class ScraperService {
     try {
       await page.waitForSelector('#arribosContainer', { timeout: 5000 });
     } catch {
-      return { error: 'No se encontraron datos de arribos.' };
+      return [{ error: 'No se encontraron datos de arribos.' }];
     }
 
     const buses = await page.$$eval('.proximo-arribo', (rows) => {

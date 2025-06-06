@@ -1,98 +1,63 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚌 Cuándo Llega Mi Micro - Bot de Telegram
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este proyecto es un bot de Telegram desarrollado con [NestJS](https://nestjs.com/) que informa a los usuarios sobre la llegada de los micros 202 y 214 en paradas específicas de La Plata. El bot envía notificaciones automáticas en horarios determinados para que no pierdas tu micro.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚦 ¿Cómo funciona?
 
-## Description
+El bot consulta información en tiempo real sobre los horarios de llegada de los micros y envía mensajes a los suscriptores de Telegram en los siguientes horarios:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Micro 214:** Lunes a viernes, de 16:00 a 19:59.
+- **Micro 202:** Lunes a viernes, de 20:00 a 23:59.
 
-## Project setup
+Por defecto envia datos de esas líneas y paradas especificas, pero proximamente podrán configurarse las líneas y paradas que desees. De todas maneras, podés suscribirte al bot mediante el siguiente link: 
 
-```bash
-$ pnpm install
-```
+**[microArribos Telegram Bot](https://t.me/MicroArribosBot)**
 
-## Compile and run the project
+## 🚀 Instalación y uso
 
-```bash
-# development
-$ pnpm run start
+1. **Clona el repositorio:**
 
-# watch mode
-$ pnpm run start:dev
+   ```bash
+   git clone https://github.com/bredigian/cuandollegamimicro-bot.git
+   cd cuandollegamimicro-bot
+   ```
 
-# production mode
-$ pnpm run start:prod
-```
+2. **Instala las dependencias:**
 
-## Run tests
+   ```bash
+   pnpm install
+   ```
 
-```bash
-# unit tests
-$ pnpm run test
+3. **Configura las variables de entorno:**  
+   Crea un archivo `.env` con tus credenciales y configuraciones necesarias (por ejemplo, token de Telegram).
 
-# e2e tests
-$ pnpm run test:e2e
+4. **Ejecuta el proyecto:**
 
-# test coverage
-$ pnpm run test:cov
-```
+   - Modo desarrollo:
+     ```bash
+     pnpm run start:dev
+     ```
+   - Modo producción:
+     ```bash
+     pnpm run start:prod
+     ```
 
-## Deployment
+## 🛠️ Tecnologías utilizadas
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- [NestJS](https://nestjs.com/) - Framework principal
+- [Node.js](https://nodejs.org/)
+- [Playwright](https://playwright.dev/)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
+- [pnpm](https://pnpm.io/) - Gestor de paquetes
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 📬 Contribuciones
 
-```bash
-$ pnpm install -g mau
-$ mau deploy
-```
+¡Las contribuciones son bienvenidas! Si tienes ideas o mejoras, no dudes en abrir un issue o un pull request.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📄 Licencia
 
-## Resources
+Este proyecto está bajo la licencia MIT.
 
-Check out a few resources that may come in handy when working with NestJS:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Desarrollado por Gianluca Bredice Developer**  

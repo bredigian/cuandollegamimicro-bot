@@ -1,11 +1,12 @@
 import { BusArrivalData, FormattedBusArrivalData } from 'src/types/bus.types';
 import { Context, Telegraf } from 'telegraf';
-import { Command, Ctx, Hears, InjectBot, Start, Update } from 'nestjs-telegraf';
+import { Ctx, Hears, InjectBot, Start, Update } from 'nestjs-telegraf';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
 import { Suscriber } from 'generated/prisma';
 import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { Message } from 'telegraf/typings/core/types/typegram';
+import { MESSAGES } from 'src/const/messages';
 
 @Update()
 @Injectable()
@@ -28,13 +29,8 @@ export class TelegramService {
         await this.suscribersService.suscribe(chatId);
         this.logger.log(`New suscriptor: ${chatId}`);
 
-        ctx.reply(
-          'Bienvenido! Te notificaré cada 2 minutos los próximos arribos que tiene configurado el bot por defecto.\n\nLas líneas son:\n- 202 (hacia La Plata y hacia UTN)\n- 214 (hacia la UTN)\n\nLas paradas son:\n- 202: 7 y 56 (hacia UTN) y 60 y 125 (hacia La Plata)\n- 214: Diagonal 73 y 10 (hacia UTN)\n\nEstas notificaciones se enviarán de lunes a viernes. En caso de que quieras desuscribirte, envia un mensaje con el comando /stop.',
-        );
-      } else
-        ctx.reply(
-          '¡Tranquilo, ya estás suscrito!\nSi estás en el rango horario, en unos instantes recibirás la notificación.',
-        );
+        ctx.reply(MESSAGES.START.WELCOME);
+      } else ctx.reply(MESSAGES.START.ALREADY_SUSCRIBED);
     } catch (error) {
       this.logger.error(
         'An error occurred while initializing the Telegram bot.',
@@ -51,17 +47,39 @@ export class TelegramService {
 
       const unsuscriptor = await this.suscribersService.unsuscribe(chatId);
       if (!unsuscriptor) {
-        ctx.reply('No estás suscripto.');
+        ctx.reply(MESSAGES.STOP.NOT_SUSCRIBED);
+
         this.logger.warn(
           `${chatId} wants to unsuscribe, but is not suscribed.`,
         );
       } else {
-        ctx.reply('Te has desuscripto a las notificaciones del bot.');
+        ctx.reply(MESSAGES.STOP.UNSUSCRIBED);
+
         this.logger.log(`${chatId} was unsuscribed.`);
       }
     } catch (error) {
       this.logger.error(
         'An error ocurred while stopping the Telegram bot suscription.',
+      );
+    }
+  }
+
+  @Hears('/info')
+  async info(@Ctx() ctx: Context) {
+    try {
+      ctx.reply(MESSAGES.INFO);
+    } catch (error) {
+      this.logger.error('An error ocurred while sending info Telegram bot.');
+    }
+  }
+
+  @Hears('/about')
+  async about(@Ctx() ctx: Context) {
+    try {
+      ctx.reply(MESSAGES.ABOUT);
+    } catch (error) {
+      this.logger.error(
+        'An error ocurred while sending about info Telegram bot.',
       );
     }
   }

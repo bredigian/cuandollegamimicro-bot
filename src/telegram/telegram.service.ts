@@ -32,7 +32,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     this.bot.command('start', async (ctx) => {
       const chatId = ctx.chat.id.toString();
       if (!this.suscribers.includes(chatId)) {
-        this.suscribers.push(chatId);
+        this.suscribers = [...this.suscribers, chatId];
         await this.saveSuscribers();
         this.logger.log(`New suscriptor: ${chatId}`);
 
@@ -97,6 +97,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     if (this.suscribers.length === 0)
       throw new NotFoundException('Data scraped but no suscribers found.');
 
+    console.log(this.suscribers);
     for (const suscriber of this.suscribers) {
       try {
         if (data[0].error)

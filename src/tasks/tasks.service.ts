@@ -47,36 +47,23 @@ export class TasksService {
     }
   }
 
-  // 214 (to UTN), 16:00 - 18:59, Monday to Friday
-  @Cron('0 16-18 * * 1-5')
-  async handleBusTask214() {
-    this.logger.log('Handling bus 214 task...');
+  // 202 & 214 (to UTN), 16:00 - 18:59, Monday to Friday
+  @Cron('*/2 16-18 * * 1-5')
+  async handleBusToUTNTask() {
+    this.logger.log('Handling bus to UTN task...');
     try {
       await this.handleBusTask(BUSES.L_214, STOPS.L_214_DIAG73Y10);
-    } catch (error) {
-      this.logger.error(
-        'An error occurred while handling the bus 214 task.',
-        error,
-      );
-    }
-  }
-
-  // 202 (to UTN), 16:00 - 19:59, Monday to Friday
-  @Cron('0 16-19 * * 1-5')
-  async handleBusTask202ToUTN() {
-    this.logger.log('Handling bus 202 (to UTN) task...');
-    try {
       await this.handleBusTask(BUSES.L_202, STOPS.L_202_7Y56);
     } catch (error) {
       this.logger.error(
-        'An error occurred while handling the bus 202 (to UTN) task.',
+        'An error occurred while handling the bus to UTN task.',
         error,
       );
     }
   }
 
-  // 202 (to La Plata), 16:00 - 19:59, Monday to Friday
-  @Cron('0 20-23 * * 1-5')
+  // 202 (to La Plata), 20:00 - 23:59, Monday to Friday
+  @Cron('*/2 20-23 * * 1-5')
   async handleBusTask202ToLaPlata() {
     this.logger.log('Handling bus 202 (to La Plata) task...');
     try {

@@ -4,3 +4,7 @@ export interface BusArrivalData {
   remainingArrivalTime?: string;
   error?: string;
 }
+
+export interface FormattedBusArrivalData extends BusArrivalData {
+  letter: string;
+}

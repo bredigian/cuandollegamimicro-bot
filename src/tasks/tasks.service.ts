@@ -1,9 +1,10 @@
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { BUSES } from 'src/types/buses.enum';
+import { Cron } from '@nestjs/schedule';
 import { STOPS } from 'src/types/stops.enum';
 import { ScraperService } from 'src/scraper/scraper.service';
+import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { TelegramService } from 'src/telegram/telegram.service';
 
 @Injectable()
@@ -13,10 +14,15 @@ export class TasksService {
   constructor(
     private scraperService: ScraperService,
     private telegramService: TelegramService,
+    private suscribersService: SuscribersService,
   ) {}
 
   private async handleBusTask(lineCode: BUSES, stopId: STOPS) {
     try {
+      const suscribers = await this.suscribersService.getSuscribers();
+      if (suscribers.length === 0)
+        throw new NotFoundException('Suscribers not found.');
+
       const data = await this.scraperService.scrapeData({
         lineCode,
         stopId,
@@ -34,9 +40,10 @@ export class TasksService {
 
       await this.telegramService.sendPreviewListMessage(
         `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
+        suscribers,
       );
 
-      await this.telegramService.sendMessageToSuscribers(data);
+      await this.telegramService.sendMessageToSuscribers(data, suscribers);
 
       this.logger.log('Bus data scraped and sent to suscribers successfully.');
     } catch (error) {

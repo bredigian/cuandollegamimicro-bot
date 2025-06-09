@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ScraperModule } from './scraper/scraper.module';
 import { ScraperService } from './scraper/scraper.service';
+import { SuscribersModule } from './suscribers/suscribers.module';
 import { TasksModule } from './tasks/tasks.module';
 import { TelegramModule } from './telegram/telegram.module';
 
@@ -14,6 +15,7 @@ import { TelegramModule } from './telegram/telegram.module';
     ScraperModule,
     TelegramModule,
     TasksModule,
+    SuscribersModule,
   ],
   controllers: [AppController],
   providers: [ScraperService],

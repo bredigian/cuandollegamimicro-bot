@@ -38,12 +38,14 @@ export class TasksService {
         (key) => STOPS[key as keyof typeof STOPS] === stopValue,
       );
 
+      const chatIds = suscribers.map((s) => s.chatId);
+
       await this.telegramService.sendPreviewListMessage(
         `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
-        suscribers,
+        chatIds,
       );
 
-      await this.telegramService.sendMessageToSuscribers(data, suscribers);
+      await this.telegramService.sendMessageToSuscribers(data, chatIds);
 
       this.logger.log('Bus data scraped and sent to suscribers successfully.');
     } catch (error) {
@@ -71,13 +73,13 @@ export class TasksService {
 
   // 202 (to La Plata), 20:00 - 23:59, Monday to Friday
   @Cron('*/2 20-23 * * 1-5')
-  async handleBusTask202ToLaPlata() {
-    this.logger.log('Handling bus 202 (to La Plata) task...');
+  async handle202BusTaskToLaPlata() {
+    this.logger.log('Handling 202 bus (to La Plata) task...');
     try {
       await this.handleBusTask(BUSES.L_202, STOPS.L_202_60Y125);
     } catch (error) {
       this.logger.error(
-        'An error occurred while handling the bus 202 (to La Plata) task.',
+        'An error occurred while handling the 202 bus (to La Plata) task.',
         error,
       );
     }

@@ -3,10 +3,12 @@ import { Context, Telegraf } from 'telegraf';
 import { Ctx, Hears, InjectBot, Start, Update } from 'nestjs-telegraf';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
-import { Suscriber } from 'generated/prisma';
 import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { Message } from 'telegraf/typings/core/types/typegram';
 import { MESSAGES } from 'src/const/messages';
+import { ScraperService } from 'src/scraper/scraper.service';
+import { BUSES } from 'src/types/buses.enum';
+import { STOPS } from 'src/types/stops.enum';
 
 @Update()
 @Injectable()
@@ -16,6 +18,7 @@ export class TelegramService {
   constructor(
     @InjectBot() private readonly bot: Telegraf<Context>,
     private readonly suscribersService: SuscribersService,
+    private readonly scraperService: ScraperService,
   ) {}
 
   @Start()
@@ -84,10 +87,124 @@ export class TelegramService {
     }
   }
 
-  async sendPreviewListMessage(value: string, suscribers: Suscriber[]) {
+  @Hears('/get214toutn')
+  async handle214BusToUTN(@Ctx() ctx: Context) {
+    this.logger.log('Handling 214 bus to UTN task...');
+
     try {
-      for (const suscriber of suscribers) {
-        await this.bot.telegram.sendMessage(suscriber.chatId, value, {
+      const chatId = ctx?.chat?.id.toString();
+      if (!chatId) throw new BadRequestException('No chatId received.');
+
+      const lineCode = BUSES.L_214;
+      const stopId = STOPS.L_214_DIAG73Y10;
+      const lineName = Object.keys(BUSES).find(
+        (key) => BUSES[key as keyof typeof BUSES] === lineCode,
+      );
+      const stopName = Object.keys(STOPS).find(
+        (key) => STOPS[key as keyof typeof STOPS] === stopId,
+      );
+
+      ctx.reply(
+        `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
+      );
+
+      const data = await this.scraperService.scrapeData({ lineCode, stopId });
+
+      const formattedData = this.formatData(data);
+      const message =
+        typeof formattedData === 'string'
+          ? formattedData
+          : this.makeMessage(formattedData);
+
+      ctx.reply(message);
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while handling the bus to UTN task.',
+        error,
+      );
+    }
+  }
+
+  @Hears('/get202toutn')
+  async handle202BusToUTN(@Ctx() ctx: Context) {
+    this.logger.log('Handling 202 bus to UTN task...');
+
+    try {
+      const chatId = ctx?.chat?.id.toString();
+      if (!chatId) throw new BadRequestException('No chatId received.');
+
+      const lineCode = BUSES.L_202;
+      const stopId = STOPS.L_202_7Y56;
+      const lineName = Object.keys(BUSES).find(
+        (key) => BUSES[key as keyof typeof BUSES] === lineCode,
+      );
+      const stopName = Object.keys(STOPS).find(
+        (key) => STOPS[key as keyof typeof STOPS] === stopId,
+      );
+
+      ctx.reply(
+        `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
+      );
+
+      const data = await this.scraperService.scrapeData({ lineCode, stopId });
+
+      const formattedData = this.formatData(data);
+      const message =
+        typeof formattedData === 'string'
+          ? formattedData
+          : this.makeMessage(formattedData);
+
+      ctx.reply(message);
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while handling the bus to UTN task.',
+        error,
+      );
+    }
+  }
+
+  @Hears('/get202tolaplata')
+  async handle202BusToLaPlata(@Ctx() ctx: Context) {
+    this.logger.log('Handling 202 bus to La Plata task...');
+
+    try {
+      const chatId = ctx?.chat?.id.toString();
+      if (!chatId) throw new BadRequestException('No chatId received.');
+
+      const lineCode = BUSES.L_202;
+      const stopId = STOPS.L_202_60Y125;
+      const lineName = Object.keys(BUSES).find(
+        (key) => BUSES[key as keyof typeof BUSES] === lineCode,
+      );
+      const stopName = Object.keys(STOPS).find(
+        (key) => STOPS[key as keyof typeof STOPS] === stopId,
+      );
+
+      ctx.reply(
+        `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
+      );
+
+      const data = await this.scraperService.scrapeData({ lineCode, stopId });
+
+      const formattedData = this.formatData(data);
+      const message =
+        typeof formattedData === 'string'
+          ? formattedData
+          : this.makeMessage(formattedData);
+
+      ctx.reply(message);
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while handling the bus to UTN task.',
+        error,
+      );
+    }
+  }
+
+  async sendPreviewListMessage(value: string, suscribers: string[]) {
+    try {
+      for (const chatId of suscribers) {
+        await this.bot.telegram.sendMessage(chatId, value, {
           parse_mode: 'Markdown',
         });
       }
@@ -101,37 +218,40 @@ export class TelegramService {
 
   async sendMessageToSuscribers(
     data: BusArrivalData[],
-    suscribers: Suscriber[],
+    suscribers: string[],
   ): Promise<Message.TextMessage | undefined> {
-    for (const suscriber of suscribers) {
+    for (const chatId of suscribers) {
       try {
         if (data[0].error)
-          return await this.bot.telegram.sendMessage(
-            suscriber.chatId,
-            data[0].error,
-            {
-              parse_mode: 'Markdown',
-            },
-          );
+          return await this.bot.telegram.sendMessage(chatId, data[0].error, {
+            parse_mode: 'Markdown',
+          });
 
         const formattedData = this.formatData(data);
-        const message = this.makeMessage(formattedData);
+        const message =
+          typeof formattedData == 'string'
+            ? formattedData
+            : this.makeMessage(formattedData);
 
-        await this.bot.telegram.sendMessage(suscriber.chatId, message, {
+        await this.bot.telegram.sendMessage(chatId, message, {
           parse_mode: 'Markdown',
         });
 
-        this.logger.log(`Message sent to ${suscriber}!`);
+        this.logger.log(`Message sent to ${chatId}!`);
       } catch (error) {
         this.logger.error(
-          `An error ocurred while sending message to ${suscriber}.`,
+          `An error ocurred while sending message to ${chatId}.`,
           error,
         );
       }
     }
   }
 
-  private formatData(data: BusArrivalData[]): FormattedBusArrivalData[] {
+  private formatData(
+    data: BusArrivalData[],
+  ): FormattedBusArrivalData[] | string {
+    if (data[0].error) return data[0].error;
+
     return data.map((bus) => {
       const [letter, ...x] = bus?.description?.split(' ')!;
       return {

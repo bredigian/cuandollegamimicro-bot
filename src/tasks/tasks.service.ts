@@ -57,7 +57,7 @@ export class TasksService {
   }
 
   // 202 & 214 (to UTN), 16:00 - 18:59, Monday to Friday
-  @Cron('*/2 16-18 * * 1-5')
+  @Cron('*/2 16-18 * * 1-5', { timeZone: 'America/Argentina/Buenos_Aires' })
   async handleBusToUTNTask() {
     this.logger.log('Handling bus to UTN task...');
     try {
@@ -72,7 +72,7 @@ export class TasksService {
   }
 
   // 202 (to La Plata), 20:00 - 23:59, Monday to Friday
-  @Cron('*/2 20-23 * * 1-5')
+  @Cron('*/2 20-23 * * 1-5', { timeZone: 'America/Argentina/Buenos_Aires' })
   async handle202BusTaskToLaPlata() {
     this.logger.log('Handling 202 bus (to La Plata) task...');
     try {

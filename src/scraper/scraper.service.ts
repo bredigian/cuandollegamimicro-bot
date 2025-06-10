@@ -42,6 +42,9 @@ export class ScraperService {
       });
     });
 
+    await page.close();
+    await browser.close();
+
     return buses.slice(0, 4); // Limit to 4 buses
   }
 }

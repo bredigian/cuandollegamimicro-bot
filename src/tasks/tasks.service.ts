@@ -52,12 +52,13 @@ export class TasksService {
 
       const chatIds = activeSuscribers.map((s) => s.chatId);
 
-      await this.telegramService.sendPreviewListMessage(
-        `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
+      const previewMessage = `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`;
+
+      await this.telegramService.sendMessageToSuscribers(
+        previewMessage,
+        data,
         chatIds,
       );
-
-      await this.telegramService.sendMessageToSuscribers(data, chatIds);
 
       this.logger.log('Bus data scraped and sent to suscribers successfully.');
     } catch (error) {

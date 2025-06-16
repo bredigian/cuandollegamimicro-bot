@@ -286,6 +286,7 @@ export class TelegramService {
   }
 
   async sendMessageToSuscribers(
+    previewMessage: string,
     data: BusArrivalData[],
     suscribers: string[],
   ): Promise<Message.TextMessage | undefined> {
@@ -297,10 +298,13 @@ export class TelegramService {
           });
 
         const formattedData = this.formatData(data);
-        const message =
-          typeof formattedData == 'string'
-            ? formattedData
-            : this.makeMessage(formattedData);
+        const message = previewMessage
+          .concat('\n\n')
+          .concat(
+            typeof formattedData == 'string'
+              ? formattedData
+              : this.makeMessage(formattedData),
+          );
 
         await this.bot.telegram.sendMessage(chatId, message, {
           parse_mode: 'Markdown',

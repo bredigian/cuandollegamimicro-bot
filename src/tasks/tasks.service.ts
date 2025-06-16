@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { BUSES } from 'src/types/buses.enum';
 import { Cron } from '@nestjs/schedule';
+import { DateTime } from 'luxon';
 import { STOPS } from 'src/types/stops.enum';
 import { ScraperService } from 'src/scraper/scraper.service';
 import { SuscribersService } from 'src/suscribers/suscribers.service';
@@ -23,7 +24,14 @@ export class TasksService {
       if (suscribers.length === 0)
         throw new NotFoundException('Suscribers not found.');
 
-      const activeSuscribers = suscribers.filter((s) => s.pauseTo === null);
+      const activeSuscribers = suscribers.filter((s) => {
+        if (!s.pauseTo) return s;
+
+        const pauseTo = DateTime.fromJSDate(new Date(s.pauseTo));
+        const now = DateTime.now();
+
+        if (now.toMillis() > pauseTo.toMillis()) return s;
+      });
       if (activeSuscribers.length === 0)
         throw new NotFoundException("Suscribers founded but they're inactive.");
 

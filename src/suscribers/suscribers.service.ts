@@ -27,4 +27,18 @@ export class SuscribersService {
 
     return await this.prisma.suscriber.delete({ where: { chatId } });
   }
+
+  async pauseNotifications(chatId: Suscriber['chatId'], date: Date) {
+    return await this.prisma.suscriber.update({
+      where: { chatId },
+      data: { pauseTo: date },
+    });
+  }
+
+  async resumeNotifications(chatId: Suscriber['chatId']) {
+    return await this.prisma.suscriber.update({
+      where: { chatId },
+      data: { pauseTo: null },
+    });
+  }
 }

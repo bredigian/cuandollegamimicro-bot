@@ -17,6 +17,7 @@ datasource db {
 model Suscriber {
   id String @id @default(cuid())
   chatId String @unique
+  pauseTo DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

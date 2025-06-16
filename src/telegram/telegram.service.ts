@@ -1,7 +1,9 @@
 import { BusArrivalData, FormattedBusArrivalData } from 'src/types/bus.types';
 import { Context, Telegraf } from 'telegraf';
-import { Ctx, Hears, InjectBot, Start, Update } from 'nestjs-telegraf';
+import { Command, Ctx, InjectBot, Start, Update } from 'nestjs-telegraf';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+
+import { DateTime } from 'luxon';
 
 import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { Message } from 'telegraf/typings/core/types/typegram';
@@ -42,7 +44,7 @@ export class TelegramService {
     }
   }
 
-  @Hears('/stop')
+  @Command('stop')
   async stop(@Ctx() ctx: Context) {
     try {
       const chatId = ctx?.chat?.id.toString();
@@ -67,7 +69,74 @@ export class TelegramService {
     }
   }
 
-  @Hears('/info')
+  @Command('pauseto')
+  async pauseTo(@Ctx() ctx: Context) {
+    try {
+      const chatId = ctx?.chat?.id.toString();
+      if (!chatId) throw new BadRequestException('No chatId received.');
+
+      await ctx.sendChatAction('typing');
+
+      const isSuscribed = await this.suscribersService.findByChatId(chatId);
+      if (!isSuscribed) {
+        ctx.reply(
+          'No es posible pausar las notificaciones ya que no estás suscripto.',
+        );
+        return;
+      }
+
+      const dateTo = ctx.message?.['text'].split(' ')[1];
+      if (!dateTo) {
+        ctx.reply(
+          'No es posible pausar las notificaciones sin una fecha indicada.',
+        );
+        return;
+      }
+      const date = DateTime.fromFormat(dateTo, 'dd/MM/yyyy', {
+        locale: 'es-AR',
+        zone: 'America/Argentina/Buenos_Aires',
+      });
+
+      if (!date.isValid) {
+        ctx.reply(
+          'La fecha no es válida. Por favor, revisa el formato solicitado.',
+        );
+        return;
+      }
+
+      await this.suscribersService.pauseNotifications(
+        chatId,
+        date.toUTC().toJSDate(),
+      );
+      ctx.reply(
+        `Las notificaciones por defecto han sido pausadas hasta ${date.toLocaleString(DateTime.DATE_SHORT)}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while pausing the Telegram bot.',
+        error,
+      );
+    }
+  }
+
+  @Command('resume')
+  async resume(@Ctx() ctx: Context) {
+    try {
+      const chatId = ctx?.chat?.id.toString();
+      if (!chatId) throw new BadRequestException('No chatId received.');
+
+      await ctx.sendChatAction('typing');
+      await this.suscribersService.resumeNotifications(chatId);
+
+      ctx.reply('Las notificaciones por defecto han sido reactivadas.');
+    } catch (error) {
+      this.logger.error(
+        'An error ocurred while resuming the Telegram bot suscription.',
+      );
+    }
+  }
+
+  @Command('info')
   async info(@Ctx() ctx: Context) {
     try {
       ctx.reply(MESSAGES.INFO);
@@ -76,7 +145,7 @@ export class TelegramService {
     }
   }
 
-  @Hears('/about')
+  @Command('about')
   async about(@Ctx() ctx: Context) {
     try {
       ctx.reply(MESSAGES.ABOUT);
@@ -87,7 +156,7 @@ export class TelegramService {
     }
   }
 
-  @Hears('/get214toutn')
+  @Command('get214toutn')
   async handle214BusToUTN(@Ctx() ctx: Context) {
     this.logger.log('Handling 214 bus to UTN task...');
 
@@ -125,7 +194,7 @@ export class TelegramService {
     }
   }
 
-  @Hears('/get202toutn')
+  @Command('get202toutn')
   async handle202BusToUTN(@Ctx() ctx: Context) {
     this.logger.log('Handling 202 bus to UTN task...');
 
@@ -163,7 +232,7 @@ export class TelegramService {
     }
   }
 
-  @Hears('/get202tolaplata')
+  @Command('get202tolaplata')
   async handle202BusToLaPlata(@Ctx() ctx: Context) {
     this.logger.log('Handling 202 bus to La Plata task...');
 

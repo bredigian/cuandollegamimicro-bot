@@ -23,6 +23,10 @@ export class TasksService {
       if (suscribers.length === 0)
         throw new NotFoundException('Suscribers not found.');
 
+      const activeSuscribers = suscribers.filter((s) => s.pauseTo === null);
+      if (activeSuscribers.length === 0)
+        throw new NotFoundException("Suscribers founded but they're inactive.");
+
       const data = await this.scraperService.scrapeData({
         lineCode,
         stopId,
@@ -38,7 +42,7 @@ export class TasksService {
         (key) => STOPS[key as keyof typeof STOPS] === stopValue,
       );
 
-      const chatIds = suscribers.map((s) => s.chatId);
+      const chatIds = activeSuscribers.map((s) => s.chatId);
 
       await this.telegramService.sendPreviewListMessage(
         `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`,
@@ -71,7 +75,7 @@ export class TasksService {
     }
   }
 
-  // 202 (to La Plata), 20:00 - 23:59, Monday to Friday
+  // // 202 (to La Plata), 20:00 - 23:59, Monday to Friday
   @Cron('*/2 20-23 * * 1-5', { timeZone: 'America/Argentina/Buenos_Aires' })
   async handle202BusTaskToLaPlata() {
     this.logger.log('Handling 202 bus (to La Plata) task...');

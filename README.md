@@ -11,7 +11,7 @@ El bot consulta información en tiempo real sobre los horarios de llegada de los
 
 Por defecto envia datos de esas líneas y paradas especificas, pero proximamente podrán configurarse las líneas y paradas que desees. De todas maneras, podés suscribirte al bot mediante el siguiente link: 
 
-**[microArribos Telegram Bot](https://t.me/MicroArribosBot)**
+**[¿Cuándo llega mi micro? Telegram Bot](https://t.me/MicroArribosBot)**
 
 ## 🚀 Instalación y uso
 
@@ -44,11 +44,9 @@ Por defecto envia datos de esas líneas y paradas especificas, pero proximamente
 
 ## 🛠️ Tecnologías utilizadas
 
-- [NestJS](https://nestjs.com/) - Framework principal
-- [Node.js](https://nodejs.org/)
+- [NestJS](https://nestjs.com/)
 - [Playwright](https://playwright.dev/)
 - [Telegram Bot API](https://core.telegram.org/bots/api)
-- [pnpm](https://pnpm.io/) - Gestor de paquetes
 
 ## 📬 Contribuciones
 

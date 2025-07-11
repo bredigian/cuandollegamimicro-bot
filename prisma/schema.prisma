@@ -21,3 +21,40 @@ model Suscriber {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model LineBus {
+  id String @id @default(cuid())
+  name String
+  code Int
+
+  Stop Stop[]
+
+  Notification Notification[]
+}
+
+model Stop {
+  id String @id @default(cuid())
+  name String
+  code String
+  lineBusId String
+  lineBus LineBus @relation(fields: [lineBusId], references: [id])
+
+  Notification Notification[]
+}
+
+model Notification {
+  id String @id @default(cuid())
+  chatId String
+  lineBusId String
+  lineBus LineBus @relation(fields: [lineBusId], references: [id])
+  stopId String
+  stop Stop @relation(fields: [stopId], references: [id])
+  startWeekday Int
+  endWeekday Int
+  startTime Int
+  endTime Int
+  active Boolean @default(true)
+  pauseTo DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

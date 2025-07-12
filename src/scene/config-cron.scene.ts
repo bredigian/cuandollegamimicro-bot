@@ -11,7 +11,10 @@ import { SceneContext } from 'telegraf/typings/scenes';
 import { Markup } from 'telegraf';
 import { Notification, Stop } from 'generated/prisma';
 import { NotificationsService } from 'src/notifications/notifications.service';
-import { convertWeekdaysStringsToNumbers } from 'src/utils/weekdays';
+import {
+  convertWeekdaysStringsToNumbers,
+  isValidWeekdays,
+} from 'src/utils/weekdays';
 import { isValidTime, Time } from 'src/utils/time';
 
 type State = {
@@ -130,6 +133,14 @@ export class ConfigCronScene {
     const state = ctx.scene.session.state as Record<string, any>;
 
     if ('line' in state && 'stop' in state && !('weekdays' in state)) {
+      if (!isValidWeekdays(text)) {
+        await ctx.reply(
+          'Los días indicados no son válidos. Revisalo y mandalo de nuevo.',
+        );
+
+        return;
+      }
+
       await ctx.reply(
         "¿En que rango horario querés que te avise? Indicamelo en formato 'hh:mm - hh:mm' (ej: 19:00 - 23:30).",
       );

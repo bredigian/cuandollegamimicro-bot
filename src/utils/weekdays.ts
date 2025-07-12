@@ -20,3 +20,16 @@ export const convertWeekdaysStringsToNumbers = (weekdays: string[]) => {
     ] as number;
   });
 };
+
+export const isValidWeekdays = (text: string) => {
+  const splittedText = text.split(',').map((day) =>
+    day
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''),
+  );
+  const validWeekdays = Object.keys(WEEKDAYS);
+
+  return splittedText.every((day) => validWeekdays.includes(day));
+};

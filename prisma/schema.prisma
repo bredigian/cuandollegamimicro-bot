@@ -49,10 +49,9 @@ model Notification {
   lineBus LineBus @relation(fields: [lineBusId], references: [id])
   stopId String
   stop Stop @relation(fields: [stopId], references: [id])
-  startWeekday Int
-  endWeekday Int
-  startTime Int
-  endTime Int
+  weekdays Int[]
+  startTime String
+  endTime String
   active Boolean @default(true)
   pauseTo DateTime?
   createdAt DateTime @default(now())

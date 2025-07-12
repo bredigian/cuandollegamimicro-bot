@@ -1,9 +1,7 @@
 import { LineBusService } from 'src/line-bus/line-bus.service';
 import {
   Action,
-  Command,
   Ctx,
-  Hears,
   On,
   Scene,
   SceneEnter,
@@ -11,13 +9,26 @@ import {
 } from 'nestjs-telegraf';
 import { SceneContext } from 'telegraf/typings/scenes';
 import { Markup } from 'telegraf';
-import { Stop } from 'generated/prisma';
+import { Notification, Stop } from 'generated/prisma';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { convertWeekdaysStringsToNumbers } from 'src/utils/weekdays';
+import { isValidTime, Time } from 'src/utils/time';
 
+type State = {
+  chatId: string;
+  line: { code: number; name: string };
+  stop: { code: string; name: string };
+  time: { start: Time; end: Time };
+  weekdays: string[];
+};
 @Scene('CONFIG_CRON_SCENE')
 export class ConfigCronScene {
   private stops: Stop[] = [];
 
-  constructor(private lineBusService: LineBusService) {}
+  constructor(
+    private lineBusService: LineBusService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: SceneContext) {
@@ -93,6 +104,8 @@ export class ConfigCronScene {
         ]),
       ),
     );
+
+    await ctx.answerCbQuery();
   }
 
   @Action(/stop:(.+)/)
@@ -113,14 +126,16 @@ export class ConfigCronScene {
 
   @On('text')
   async onText(@Ctx() ctx: SceneContext) {
-    const text = ctx.message?.['text'].trim().toLowerCase();
+    const text = (ctx.message?.['text'] as string).trim().toLowerCase();
     const state = ctx.scene.session.state as Record<string, any>;
 
-    if ('line' in state && 'stop' in state && !('days' in state)) {
+    if ('line' in state && 'stop' in state && !('weekdays' in state)) {
       await ctx.reply(
         "¿En que rango horario querés que te avise? Indicamelo en formato 'hh:mm - hh:mm' (ej: 19:00 - 23:30).",
       );
-      (ctx.scene.session.state as Record<string, any>).days = text;
+      (ctx.scene.session.state as Record<string, any>).weekdays = text
+        .split(',')
+        .map((day) => day.trim());
 
       return;
     }
@@ -128,20 +143,24 @@ export class ConfigCronScene {
     if (
       'line' in state &&
       'stop' in state &&
-      'days' in state &&
+      'weekdays' in state &&
       !('time' in state)
     ) {
-      const [startTime, endTime] = (text as string)
-        .split('-')
-        ?.map((t) => Number(t.trim()));
+      const [startTime, endTime] = (text as string).split('-') as Time[];
 
-      if (isNaN(startTime) || isNaN(endTime) || startTime > endTime) {
+      if (!isValidTime(startTime) || !isValidTime(endTime)) {
         await ctx.reply(
-          'El horario que ingresaste no es valido. Por favor, ingresalo de nuevo.',
+          'El rango horario no es válido. Revisalo e intentá de nuevo.',
         );
+
         return;
       }
-      const summary = `🚍 ${state?.line.name}\n🚏 ${state?.stop.name} (${state?.stop.code})\n 📅 ${state?.days}\n 🕒 ${startTime.toString().padStart(2, '0')}:00 a ${endTime.toString().padStart(2, '0')}:00`;
+
+      const joinedWeekdays = (state.weekdays as string[])
+        .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+        .join(', ');
+
+      const summary = `🚍 Línea ${state?.line.name}\n🚏 ${state?.stop.name} (${state?.stop.code})\n 📅 ${joinedWeekdays}\n 🕒 ${startTime} a ${endTime}`;
 
       await ctx.reply(
         `${summary}\n\n ¿Lo confirmás?`,
@@ -150,6 +169,11 @@ export class ConfigCronScene {
           Markup.button.callback('Cancelar', 'confirm:no'),
         ]),
       );
+
+      (ctx.scene.session.state as Record<string, any>).time = {
+        start: startTime,
+        end: endTime,
+      };
 
       return;
     }
@@ -168,7 +192,45 @@ export class ConfigCronScene {
       return;
     }
 
-    await ctx.reply('Configuración confirmada. Guardando en base de datos...');
+    const state = ctx.scene.session.state as State;
+
+    const lineBus = await this.lineBusService.findByLineCode(state.line.code);
+
+    if (!lineBus) {
+      await ctx.reply('El micro seleccionado no existe o no está disponible.');
+
+      return;
+    }
+
+    const weekdays = convertWeekdaysStringsToNumbers(state.weekdays);
+
+    const selectedStop = this.stops.find(
+      (stop) => stop.code === state.stop.code,
+    );
+
+    const notification: Partial<Notification> = {
+      lineBusId: lineBus.id,
+      stopId: selectedStop?.id,
+      chatId: state.chatId,
+      weekdays,
+      startTime: state.time.start,
+      endTime: state.time.end,
+    };
+
+    const storedNotification =
+      await this.notificationsService.createNotification(
+        notification as Notification,
+      );
+
+    if (!storedNotification) {
+      await ctx.reply(
+        'Ocurrió un error al crear la notificación. Intentá de nuevo más tarde.',
+      );
+
+      return;
+    }
+
+    await ctx.reply('¡Tu notificación se creó exitosamente! ✅');
     await ctx.scene.leave();
     await ctx.answerCbQuery();
   }

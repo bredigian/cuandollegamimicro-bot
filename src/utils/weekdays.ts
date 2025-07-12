@@ -1,0 +1,22 @@
+const WEEKDAYS = {
+  lunes: 1,
+  martes: 2,
+  miercoles: 3,
+  jueves: 4,
+  viernes: 5,
+  sabado: 6,
+  domingo: 0,
+  todos: 8,
+};
+
+export const convertWeekdaysStringsToNumbers = (weekdays: string[]) => {
+  return weekdays.map((day) => {
+    return WEEKDAYS[
+      day
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+    ] as number;
+  });
+};

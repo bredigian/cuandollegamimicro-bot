@@ -11,6 +11,7 @@ import { MESSAGES } from 'src/const/messages';
 import { ScraperService } from 'src/scraper/scraper.service';
 import { BUSES } from 'src/types/buses.enum';
 import { STOPS } from 'src/types/stops.enum';
+import { SceneContext } from 'telegraf/typings/scenes';
 
 @Update()
 @Injectable()
@@ -132,6 +133,18 @@ export class TelegramService {
     } catch (error) {
       this.logger.error(
         'An error ocurred while resuming the Telegram bot suscription.',
+      );
+    }
+  }
+
+  @Command('configcron')
+  async configCron(@Ctx() ctx: SceneContext) {
+    try {
+      await ctx.scene.enter('CONFIG_CRON_SCENE');
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while configuring the cron scene.',
+        error,
       );
     }
   }

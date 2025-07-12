@@ -7,6 +7,7 @@ import { ScraperService } from './scraper/scraper.service';
 import { SuscribersModule } from './suscribers/suscribers.module';
 import { TasksModule } from './tasks/tasks.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { LineBusModule } from './line-bus/line-bus.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TelegramModule } from './telegram/telegram.module';
     TelegramModule,
     TasksModule,
     SuscribersModule,
+    LineBusModule,
   ],
   controllers: [AppController],
   providers: [ScraperService],

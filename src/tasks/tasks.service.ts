@@ -1,12 +1,12 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { LineBus, Notification, Stop } from 'generated/prisma';
 
-import { BUSES } from 'src/types/buses.enum';
 import { Cron } from '@nestjs/schedule';
 import { DateTime } from 'luxon';
-import { STOPS } from 'src/types/stops.enum';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { ScraperService } from 'src/scraper/scraper.service';
-import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { TelegramService } from 'src/telegram/telegram.service';
+import { Time } from 'src/utils/time';
 
 @Injectable()
 export class TasksService {
@@ -15,52 +15,29 @@ export class TasksService {
   constructor(
     private scraperService: ScraperService,
     private telegramService: TelegramService,
-    private suscribersService: SuscribersService,
+    private notificationsService: NotificationsService,
   ) {}
 
-  private async handleBusTask(lineCode: BUSES, stopId: STOPS) {
+  private async handleBusTask(
+    chatId: Notification['chatId'],
+    lineBus: LineBus,
+    stop: Stop,
+  ) {
     try {
-      const suscribers = await this.suscribersService.getSuscribers();
-      if (suscribers.length === 0)
-        throw new NotFoundException('Suscribers not found.');
-
-      const activeSuscribers = suscribers.filter((s) => {
-        if (!s.pauseTo) return s;
-
-        const pauseTo = DateTime.fromJSDate(new Date(s.pauseTo));
-        const now = DateTime.now();
-
-        if (now.toMillis() > pauseTo.toMillis()) return s;
-      });
-      if (activeSuscribers.length === 0)
-        throw new NotFoundException("Suscribers founded but they're inactive.");
-
       const data = await this.scraperService.scrapeData({
-        lineCode,
-        stopId,
+        lineCode: lineBus.code,
+        stopId: stop.code,
       });
 
-      const lineValue = lineCode;
-      const lineName = Object.keys(BUSES).find(
-        (key) => BUSES[key as keyof typeof BUSES] === lineValue,
-      );
+      const previewMessage = `⌛ Los próximos ${lineBus.name} que están por llegar a ${stop.name} (${stop.code}) son:`;
 
-      const stopValue = stopId;
-      const stopName = Object.keys(STOPS).find(
-        (key) => STOPS[key as keyof typeof STOPS] === stopValue,
-      );
-
-      const chatIds = activeSuscribers.map((s) => s.chatId);
-
-      const previewMessage = `⌛ Los próximos ${lineName?.split('_')[1]} que están por llegar a la parada ${stopName?.split('_')[2]} son:`;
-
-      await this.telegramService.sendMessageToSuscribers(
+      await this.telegramService.sendMessageToChatId(
         previewMessage,
         data,
-        chatIds,
+        chatId,
       );
 
-      this.logger.log('Bus data scraped and sent to suscribers successfully.');
+      this.logger.log('Bus data scraped and sent to suscriber successfully.');
     } catch (error) {
       this.logger.error(
         'An error occurred while scraping and sending bus data in the cron job.\n',
@@ -69,30 +46,32 @@ export class TasksService {
     }
   }
 
-  // 202 & 214 (to UTN), 16:00 - 18:59, Monday to Friday
-  @Cron('*/2 16-18 * * 1-5', { timeZone: 'America/Argentina/Buenos_Aires' })
-  async handleBusToUTNTask() {
-    this.logger.log('Handling bus to UTN task...');
-    try {
-      await this.handleBusTask(BUSES.L_214, STOPS.L_214_DIAG73Y10);
-      await this.handleBusTask(BUSES.L_202, STOPS.L_202_7Y56);
-    } catch (error) {
-      this.logger.error(
-        'An error occurred while handling the bus to UTN task.',
-        error,
-      );
-    }
-  }
+  // Handle notifications every 2 minutes
+  @Cron('*/2 * * * *', { timeZone: 'America/Argentina/Buenos_Aires' })
+  async handleBusNotifications() {
+    this.logger.log('Handling bus notifications...');
 
-  // // 202 (to La Plata), 20:00 - 23:59, Monday to Friday
-  @Cron('*/2 20-23 * * 1-5', { timeZone: 'America/Argentina/Buenos_Aires' })
-  async handle202BusTaskToLaPlata() {
-    this.logger.log('Handling 202 bus (to La Plata) task...');
     try {
-      await this.handleBusTask(BUSES.L_202, STOPS.L_202_60Y125);
+      const now = DateTime.now()
+        .setZone('America/Argentina/Buenos_Aires')
+        .setLocale('es-AR');
+      const currentTime: Time = `${now.hour}:${now.minute}`;
+      const currentWeekday = now.weekday;
+
+      const notifications = await this.notificationsService.getNotifications(
+        currentTime,
+        currentWeekday,
+      );
+
+      for (const notification of notifications)
+        await this.handleBusTask(
+          notification.chatId,
+          notification.lineBus,
+          notification.stop,
+        );
     } catch (error) {
       this.logger.error(
-        'An error occurred while handling the 202 bus (to La Plata) task.',
+        'An error occurred while handling bus notifications.',
         error,
       );
     }

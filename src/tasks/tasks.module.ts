@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ScraperService } from 'src/scraper/scraper.service';
-import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { TasksService } from './tasks.service';
 import { TelegramService } from 'src/telegram/telegram.service';
 
@@ -10,7 +10,7 @@ import { TelegramService } from 'src/telegram/telegram.service';
     TasksService,
     ScraperService,
     TelegramService,
-    SuscribersService,
+    NotificationsService,
     PrismaService,
   ],
 })

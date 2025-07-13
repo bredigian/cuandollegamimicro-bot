@@ -10,6 +10,8 @@ const WEEKDAYS = {
 };
 
 export const convertWeekdaysStringsToNumbers = (weekdays: string[]) => {
+  if (weekdays[0] === 'todos') return [1, 2, 3, 4, 5, 6, 7];
+
   return weekdays.map((day) => {
     return WEEKDAYS[
       day

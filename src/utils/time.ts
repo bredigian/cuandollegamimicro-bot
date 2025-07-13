@@ -8,3 +8,9 @@ export const isValidTime = (time: Time) => {
 
   return true;
 };
+
+export const timeStringToMinutes = (time: Time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+
+  return hours * 60 + minutes;
+};

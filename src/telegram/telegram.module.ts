@@ -5,7 +5,6 @@ import { Module } from '@nestjs/common';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ScraperService } from 'src/scraper/scraper.service';
-import { SuscribersService } from 'src/suscribers/suscribers.service';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { TelegramService } from './telegram.service';
 import { session } from 'telegraf';
@@ -20,7 +19,6 @@ import { session } from 'telegraf';
   ],
   providers: [
     TelegramService,
-    SuscribersService,
     PrismaService,
     ScraperService,
     ConfigCronScene,

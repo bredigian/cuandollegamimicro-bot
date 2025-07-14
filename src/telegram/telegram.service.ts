@@ -4,7 +4,6 @@ import { Command, Ctx, InjectBot, Start, Update } from 'nestjs-telegraf';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
 import { MESSAGES } from 'src/const/messages';
-import { ScraperService } from 'src/scraper/scraper.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 
 import { SceneContext } from 'telegraf/typings/scenes';
@@ -19,7 +18,6 @@ export class TelegramService {
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<Context>,
-    private readonly scraperService: ScraperService,
     private notificationsService: NotificationsService,
   ) {}
 
@@ -50,6 +48,30 @@ export class TelegramService {
     }
   }
 
+  @Command('enablenotification')
+  async activeNotification(@Ctx() ctx: SceneContext) {
+    try {
+      await ctx.scene.enter('ACTIVE_CRON_SCENE');
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while configuring the cron scene.',
+        error,
+      );
+    }
+  }
+
+  @Command('disablenotification')
+  async deactiveNotification(@Ctx() ctx: SceneContext) {
+    try {
+      await ctx.scene.enter('DEACTIVE_CRON_SCENE');
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while configuring the cron scene.',
+        error,
+      );
+    }
+  }
+
   @Command('getmynotifications')
   async getMyNotifications(@Ctx() ctx: Context) {
     try {
@@ -57,7 +79,7 @@ export class TelegramService {
       if (!chatId) throw new BadRequestException('No chatId received.');
 
       const notifications = await this.notificationsService.getByChatId(chatId);
-      if (!notifications) {
+      if (notifications.length === 0) {
         ctx.reply('Todavía no configuraste ninguna notificación.');
 
         return;
@@ -66,7 +88,7 @@ export class TelegramService {
       const message = notifications
         .map(
           (n) =>
-            `🚍 Línea ${n.lineBus.name}\n🚏 ${n.stop.name} (${n.stop.code})\n📅 ${n.weekdays.map((w) => capitalizeText(WEEKDAYS_NUM_TO_TEXT[w])).join(', ')}\n🕒 ${n.startTime} - ${n.endTime}\nCreado el ${DateTime.fromJSDate(new Date(n.createdAt)).toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}`,
+            `${n.active ? '🟢 Activa' : '🔴 Inactiva'}\n🚍 Línea ${n.lineBus.name}\n🚏 ${n.stop.name} (${n.stop.code})\n📅 ${n.weekdays.map((w) => capitalizeText(WEEKDAYS_NUM_TO_TEXT[w])).join(', ')}\n🕒 ${n.startTime} - ${n.endTime}\nCreado el ${DateTime.fromJSDate(new Date(n.createdAt)).toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}\nActualizado el ${DateTime.fromJSDate(new Date(n.updatedAt)).toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}`,
         )
         .join('\n\n');
 

@@ -1,5 +1,7 @@
+import { ActiveCronScene } from 'src/scene/active-cron.scene';
 import { ConfigCronScene } from 'src/scene/config-cron.scene';
 import { ConfigModule } from '@nestjs/config';
+import { DeactiveCronScene } from 'src/scene/deactive-cron.scene';
 import { LineBusService } from 'src/line-bus/line-bus.service';
 import { Module } from '@nestjs/common';
 import { NotificationsService } from 'src/notifications/notifications.service';
@@ -22,6 +24,8 @@ import { session } from 'telegraf';
     PrismaService,
     ScraperService,
     ConfigCronScene,
+    ActiveCronScene,
+    DeactiveCronScene,
     LineBusService,
     NotificationsService,
   ],

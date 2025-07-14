@@ -41,6 +41,5 @@ export const isValidWeekdays = (text: string) => {
 };
 
 export const capitalizeText = (text: string) => {
-  console.log(text);
   return text.charAt(0).toUpperCase().concat(text.toLowerCase().slice(1));
 };

@@ -69,6 +69,8 @@ export class TasksService {
           notification.lineBus,
           notification.stop,
         );
+
+      this.logger.log('Notifications were sent ✅');
     } catch (error) {
       this.logger.error(
         'An error occurred while handling bus notifications.',

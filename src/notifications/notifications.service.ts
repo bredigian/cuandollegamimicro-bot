@@ -19,6 +19,7 @@ export class NotificationsService {
     const notifications = await this.prisma.notification.findMany({
       where: { active: true, weekdays: { hasSome: [weekday] } },
       include: { lineBus: true, stop: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     return notifications.filter((n) => {
@@ -29,10 +30,15 @@ export class NotificationsService {
     });
   }
 
-  async getByChatId(chatId: string) {
+  async getByChatId(chatId: string, activity?: boolean) {
     return await this.prisma.notification.findMany({
-      where: { chatId },
+      where: { chatId, active: activity ?? undefined },
       include: { lineBus: true, stop: true },
+      orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async updateById(id: Notification['id'], data: Partial<Notification>) {
+    return await this.prisma.notification.update({ where: { id }, data });
   }
 }

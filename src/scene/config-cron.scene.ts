@@ -16,6 +16,7 @@ import {
   isValidWeekdays,
 } from 'src/utils/weekdays';
 import { isValidTime, Time } from 'src/utils/time';
+import { Logger } from '@nestjs/common';
 
 type State = {
   chatId: string;
@@ -27,6 +28,7 @@ type State = {
 @Scene('CONFIG_CRON_SCENE')
 export class ConfigCronScene {
   private stops: Stop[] = [];
+  private readonly logger = new Logger('ConfigCronSceneLogger');
 
   constructor(
     private lineBusService: LineBusService,
@@ -36,6 +38,12 @@ export class ConfigCronScene {
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: SceneContext) {
     const chatId = ctx.chat?.id.toString();
+    if (!chatId) {
+      this.logger.error('No chatId received.');
+      await ctx.scene.leave();
+
+      return;
+    }
 
     const lineBus = await this.lineBusService.getLinesBus();
 

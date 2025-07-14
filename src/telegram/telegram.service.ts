@@ -5,9 +5,12 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
 import { MESSAGES } from 'src/const/messages';
 import { ScraperService } from 'src/scraper/scraper.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 import { SceneContext } from 'telegraf/typings/scenes';
 import { Notification } from 'generated/prisma';
+import { capitalizeText, WEEKDAYS_NUM_TO_TEXT } from 'src/utils/weekdays';
+import { DateTime } from 'luxon';
 
 @Update()
 @Injectable()
@@ -17,6 +20,7 @@ export class TelegramService {
   constructor(
     @InjectBot() private readonly bot: Telegraf<Context>,
     private readonly scraperService: ScraperService,
+    private notificationsService: NotificationsService,
   ) {}
 
   @Start()
@@ -34,73 +38,6 @@ export class TelegramService {
     }
   }
 
-  // @Command('pauseto')
-  // async pauseTo(@Ctx() ctx: Context) {
-  //   try {
-  //     const chatId = ctx?.chat?.id.toString();
-  //     if (!chatId) throw new BadRequestException('No chatId received.');
-
-  //     await ctx.sendChatAction('typing');
-
-  //     const isSuscribed = await this.suscribersService.findByChatId(chatId);
-  //     if (!isSuscribed) {
-  //       ctx.reply(
-  //         'No es posible pausar las notificaciones ya que no estás suscripto.',
-  //       );
-  //       return;
-  //     }
-
-  //     const dateTo = ctx.message?.['text'].split(' ')[1];
-  //     if (!dateTo) {
-  //       ctx.reply(
-  //         'No es posible pausar las notificaciones sin una fecha indicada.',
-  //       );
-  //       return;
-  //     }
-  //     const date = DateTime.fromFormat(dateTo, 'dd/MM/yyyy', {
-  //       locale: 'es-AR',
-  //       zone: 'America/Argentina/Buenos_Aires',
-  //     });
-
-  //     if (!date.isValid) {
-  //       ctx.reply(
-  //         'La fecha no es válida. Por favor, revisa el formato solicitado.',
-  //       );
-  //       return;
-  //     }
-
-  //     await this.suscribersService.pauseNotifications(
-  //       chatId,
-  //       date.toUTC().toJSDate(),
-  //     );
-  //     ctx.reply(
-  //       `Las notificaciones por defecto han sido pausadas hasta ${date.toLocaleString(DateTime.DATE_SHORT)}`,
-  //     );
-  //   } catch (error) {
-  //     this.logger.error(
-  //       'An error occurred while pausing the Telegram bot.',
-  //       error,
-  //     );
-  //   }
-  // }
-
-  // @Command('resume')
-  // async resume(@Ctx() ctx: Context) {
-  //   try {
-  //     const chatId = ctx?.chat?.id.toString();
-  //     if (!chatId) throw new BadRequestException('No chatId received.');
-
-  //     await ctx.sendChatAction('typing');
-  //     await this.suscribersService.resumeNotifications(chatId);
-
-  //     ctx.reply('Las notificaciones por defecto han sido reactivadas.');
-  //   } catch (error) {
-  //     this.logger.error(
-  //       'An error ocurred while resuming the Telegram bot suscription.',
-  //     );
-  //   }
-  // }
-
   @Command('configcron')
   async configCron(@Ctx() ctx: SceneContext) {
     try {
@@ -108,6 +45,35 @@ export class TelegramService {
     } catch (error) {
       this.logger.error(
         'An error occurred while configuring the cron scene.',
+        error,
+      );
+    }
+  }
+
+  @Command('getmynotifications')
+  async getMyNotifications(@Ctx() ctx: Context) {
+    try {
+      const chatId = ctx?.chat?.id?.toString();
+      if (!chatId) throw new BadRequestException('No chatId received.');
+
+      const notifications = await this.notificationsService.getByChatId(chatId);
+      if (!notifications) {
+        ctx.reply('Todavía no configuraste ninguna notificación.');
+
+        return;
+      }
+
+      const message = notifications
+        .map(
+          (n) =>
+            `🚍 Línea ${n.lineBus.name}\n🚏 ${n.stop.name} (${n.stop.code})\n📅 ${n.weekdays.map((w) => capitalizeText(WEEKDAYS_NUM_TO_TEXT[w])).join(', ')}\n🕒 ${n.startTime} - ${n.endTime}\nCreado el ${DateTime.fromJSDate(new Date(n.createdAt)).toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}`,
+        )
+        .join('\n\n');
+
+      ctx.reply(`Tus notificaciones son:\n\n${message}`);
+    } catch (error) {
+      this.logger.error(
+        "An error occurred while getting chatId's notifications.",
         error,
       );
     }

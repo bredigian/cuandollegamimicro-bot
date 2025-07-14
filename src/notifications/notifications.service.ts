@@ -28,4 +28,11 @@ export class NotificationsService {
       return currentMinutes >= start && currentMinutes <= end;
     });
   }
+
+  async getByChatId(chatId: string) {
+    return await this.prisma.notification.findMany({
+      where: { chatId },
+      include: { lineBus: true, stop: true },
+    });
+  }
 }

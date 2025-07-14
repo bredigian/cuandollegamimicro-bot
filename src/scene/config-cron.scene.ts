@@ -191,7 +191,7 @@ export class ConfigCronScene {
   }
 
   @Action(/confirm:(.+)/)
-  async onCancel(@Ctx() ctx: SceneContext) {
+  async onConfirm(@Ctx() ctx: SceneContext) {
     const action = (ctx.callbackQuery?.['data'] as string).split(':')[1];
     const confirm = action === 'yes';
 

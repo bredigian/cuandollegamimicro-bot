@@ -1,8 +1,8 @@
-import { Time, timeStringToMinutes } from 'src/utils/time';
-
+import { DateTime } from 'luxon';
 import { Injectable } from '@nestjs/common';
 import { Notification } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Time } from 'src/utils/time';
 
 @Injectable()
 export class NotificationsService {
@@ -13,9 +13,6 @@ export class NotificationsService {
   }
 
   async getNotifications(currentTime: Time, weekday: number) {
-    const [hours, minutes] = currentTime.split(':').map(Number);
-    const currentMinutes = hours * 60 + minutes;
-
     const notifications = await this.prisma.notification.findMany({
       where: { active: true, weekdays: { hasSome: [weekday] } },
       include: { lineBus: true, stop: true },
@@ -23,10 +20,20 @@ export class NotificationsService {
     });
 
     return notifications.filter((n) => {
-      const start = timeStringToMinutes(n.startTime as Time);
-      const end = timeStringToMinutes(n.endTime as Time);
+      const [startHours, startMinutes] = n.startTime.split(':').map(Number);
+      const [endHours, endMinutes] = n.endTime.split(':').map(Number);
 
-      return currentMinutes >= start && currentMinutes <= end;
+      const now = DateTime.now().setZone('America/Argentina/Buenos_Aires');
+
+      const startTime = now.set({ hour: startHours, minute: startMinutes });
+      const endTime = now
+        .set({ hour: endHours, minute: endMinutes })
+        .plus({ days: endHours === 0 ? 1 : 0 });
+
+      return (
+        now.toMillis() >= startTime.toMillis() &&
+        now.toMillis() <= endTime.toMillis()
+      );
     });
   }
 

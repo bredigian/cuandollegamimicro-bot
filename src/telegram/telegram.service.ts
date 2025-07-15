@@ -88,7 +88,7 @@ export class TelegramService {
       const message = notifications
         .map(
           (n) =>
-            `${n.active ? '🟢 Activa' : '🔴 Inactiva'}\n🚍 Línea ${n.lineBus.name}\n🚏 ${n.stop.name} (${n.stop.code})\n📅 ${n.weekdays.map((w) => capitalizeText(WEEKDAYS_NUM_TO_TEXT[w])).join(', ')}\n🕒 ${n.startTime} - ${n.endTime}\nCreado el ${DateTime.fromJSDate(new Date(n.createdAt)).toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}\nActualizado el ${DateTime.fromJSDate(new Date(n.updatedAt)).toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}`,
+            `${n.active ? '🟢 Activa' : '🔴 Inactiva'}\n🚍 Línea ${n.lineBus.name}\n🚏 ${n.stop.name} (${n.stop.code})\n📅 ${n.weekdays.map((w) => capitalizeText(WEEKDAYS_NUM_TO_TEXT[w])).join(', ')}\n🕒 ${n.startTime} - ${n.endTime}\nCreado el ${DateTime.fromJSDate(new Date(n.createdAt)).setZone('America/Argentina/Buenos_Aires').toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}\nActualizado el ${DateTime.fromJSDate(new Date(n.updatedAt)).setZone('America/Argentina/Buenos_Aires').toLocaleString(DateTime.DATETIME_SHORT, { locale: 'es-AR' })}`,
         )
         .join('\n\n');
 

@@ -1,8 +1,19 @@
+import { LineBus, Notification, Stop } from 'generated/prisma';
+
 import { DateTime } from 'luxon';
 import { Injectable } from '@nestjs/common';
-import { Notification } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Time } from 'src/utils/time';
+
+interface NotificationFull extends Notification {
+  lineBus: LineBus;
+  stop: Stop;
+}
+
+export interface NotificationGroup {
+  lineBus: NotificationFull['lineBus'];
+  stop: NotificationFull['stop'];
+  chats: Notification['chatId'][];
+}
 
 @Injectable()
 export class NotificationsService {
@@ -12,7 +23,7 @@ export class NotificationsService {
     return await this.prisma.notification.create({ data });
   }
 
-  async getNotifications(currentTime: Time, weekday: number) {
+  async getNotifications(weekday: number) {
     const notifications = await this.prisma.notification.findMany({
       where: { active: true, weekdays: { hasSome: [weekday] } },
       include: { lineBus: true, stop: true },
@@ -47,5 +58,24 @@ export class NotificationsService {
 
   async updateById(id: Notification['id'], data: Partial<Notification>) {
     return await this.prisma.notification.update({ where: { id }, data });
+  }
+
+  groupNotifications(data: NotificationFull[]) {
+    const groups: Record<string, NotificationGroup> = {};
+
+    for (const notification of data) {
+      const key = `${notification.lineBus.code}:${notification.stop.code}`;
+
+      if (!groups[key])
+        groups[key] = {
+          lineBus: notification.lineBus,
+          stop: notification.stop,
+          chats: [],
+        };
+
+      groups[key].chats.push(notification.chatId);
+    }
+
+    return Object.values(groups);
   }
 }

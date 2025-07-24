@@ -1,50 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LineBus, Notification, Stop } from 'generated/prisma';
 
 import { Cron } from '@nestjs/schedule';
 import { DateTime } from 'luxon';
+import { InjectQueue } from '@nestjs/bull';
 import { NotificationsService } from 'src/notifications/notifications.service';
-import { ScraperService } from 'src/scraper/scraper.service';
-import { TelegramService } from 'src/telegram/telegram.service';
-import { Time } from 'src/utils/time';
+import { Queue } from 'bull';
 
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
 
   constructor(
-    private scraperService: ScraperService,
-    private telegramService: TelegramService,
     private notificationsService: NotificationsService,
+    @InjectQueue('notifications') private notificationsQueue: Queue,
   ) {}
-
-  private async handleBusTask(
-    chatId: Notification['chatId'],
-    lineBus: LineBus,
-    stop: Stop,
-  ) {
-    try {
-      const data = await this.scraperService.scrapeData({
-        lineCode: lineBus.code,
-        stopId: stop.code,
-      });
-
-      const previewMessage = `⌛ Los próximos ${lineBus.name} que están por llegar a ${stop.name} (${stop.code}) son:`;
-
-      await this.telegramService.sendMessageToChatId(
-        previewMessage,
-        data,
-        chatId,
-      );
-
-      this.logger.log('Bus data scraped and sent to suscriber successfully.');
-    } catch (error) {
-      this.logger.error(
-        'An error occurred while scraping and sending bus data in the cron job.\n',
-        error,
-      );
-    }
-  }
 
   // Handle notifications every 2 minutes
   @Cron('*/2 * * * *', { timeZone: 'America/Argentina/Buenos_Aires' })
@@ -55,22 +24,24 @@ export class TasksService {
       const now = DateTime.now()
         .setZone('America/Argentina/Buenos_Aires')
         .setLocale('es-AR');
-      const currentTime: Time = `${now.hour}:${now.minute}`;
       const currentWeekday = now.weekday;
 
-      const notifications = await this.notificationsService.getNotifications(
-        currentTime,
-        currentWeekday,
-      );
+      const notifications =
+        await this.notificationsService.getNotifications(currentWeekday);
 
-      for (const notification of notifications)
-        await this.handleBusTask(
-          notification.chatId,
-          notification.lineBus,
-          notification.stop,
-        );
+      // Agrupamos las notificaciones por parada de micro para optimizar
+      const groupedNotifications =
+        this.notificationsService.groupNotifications(notifications);
 
-      this.logger.log('Notifications were sent ✅');
+      // Enviamos cada grupo de parada de micro como tarea a la cola de Bull
+      for (const task of groupedNotifications) {
+        await this.notificationsQueue.add('notificationEnqueued', task, {
+          attempts: 3,
+          backoff: 5000,
+        });
+      }
+
+      this.logger.log('Notifications were enqueued ✅');
     } catch (error) {
       this.logger.error(
         'An error occurred while handling bus notifications.',

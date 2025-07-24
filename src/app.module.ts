@@ -1,4 +1,5 @@
 import { AppController } from './app.controller';
+import { BullModule } from '@nestjs/bull';
 import { ConfigModule } from '@nestjs/config';
 import { LineBusModule } from './line-bus/line-bus.module';
 import { Module } from '@nestjs/common';
@@ -15,6 +16,9 @@ import { TelegramModule } from './telegram/telegram.module';
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
+    BullModule.forRoot({
+      redis: { host: 'localhost', port: 6379 },
+    }),
     ScraperModule,
     TelegramModule,
     TasksModule,

@@ -1,4 +1,3 @@
-import { BusArrivalData, FormattedBusArrivalData } from 'src/types/bus.types';
 import { Context, Telegraf } from 'telegraf';
 import { Command, Ctx, InjectBot, Start, Update } from 'nestjs-telegraf';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
@@ -7,7 +6,6 @@ import { MESSAGES } from 'src/const/messages';
 import { NotificationsService } from 'src/notifications/notifications.service';
 
 import { SceneContext } from 'telegraf/typings/scenes';
-import { Notification } from 'generated/prisma';
 import { capitalizeText, WEEKDAYS_NUM_TO_TEXT } from 'src/utils/weekdays';
 import { DateTime } from 'luxon';
 
@@ -119,71 +117,5 @@ export class TelegramService {
         'An error ocurred while sending about info Telegram bot.',
       );
     }
-  }
-
-  async sendPreviewListMessage(value: string, suscribers: string[]) {
-    try {
-      for (const chatId of suscribers) {
-        await this.bot.telegram.sendMessage(chatId, value, {
-          parse_mode: 'Markdown',
-        });
-      }
-    } catch (error) {
-      this.logger.error(
-        'An error occurred while sending preview list message.\n',
-        error,
-      );
-    }
-  }
-
-  async sendMessageToChatId(
-    previewMessage: string,
-    data: BusArrivalData[],
-    chatId: Notification['chatId'],
-  ) {
-    try {
-      const formattedData = this.formatData(data);
-      const message = previewMessage
-        .concat('\n\n')
-        .concat(
-          typeof formattedData == 'string'
-            ? formattedData
-            : this.makeMessage(formattedData),
-        );
-
-      await this.bot.telegram.sendMessage(chatId, message, {
-        parse_mode: 'Markdown',
-      });
-
-      this.logger.log(`Message sent to ${chatId}!`);
-    } catch (error) {
-      this.logger.error(
-        `An error ocurred while sending message to ${chatId}.`,
-        error,
-      );
-    }
-  }
-  private formatData(
-    data: BusArrivalData[],
-  ): FormattedBusArrivalData[] | string {
-    if (data[0].error) return data[0].error;
-
-    return data.map((bus) => {
-      const [letter, ...x] = bus?.description?.split(' ')!;
-      return {
-        ...bus,
-        letter,
-        description: x.splice(1).join(' '),
-      };
-    });
-  }
-
-  private makeMessage(data: FormattedBusArrivalData[]): string {
-    return data
-      .map(
-        (bus) =>
-          `🚍 ${bus.line} ${bus.letter}\n➡️ ${bus.description}\n🕒 ${bus?.remainingArrivalTime}`,
-      )
-      .join('\n\n');
   }
 }

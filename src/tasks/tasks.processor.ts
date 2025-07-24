@@ -4,7 +4,7 @@ import { Job } from 'bull';
 import { Logger } from '@nestjs/common';
 import { NotificationGroup } from 'src/notifications/notifications.service';
 import { ScraperService } from 'src/scraper/scraper.service';
-import { TelegramService } from 'src/telegram/telegram.service';
+import { TelegramHttpService } from 'src/telegram/telegram-http.service';
 
 @Processor('notifications')
 export class TasksProcessor {
@@ -12,7 +12,7 @@ export class TasksProcessor {
 
   constructor(
     private scraperService: ScraperService,
-    private telegramService: TelegramService,
+    private telegramHttpService: TelegramHttpService,
   ) {}
 
   @Process('notificationEnqueued')
@@ -29,10 +29,10 @@ export class TasksProcessor {
       const previewMessage = `⌛ Los próximos ${lineBus.name} que están por llegar a ${stop.name} (${stop.code}) son:`;
 
       for (const chatId of chats)
-        await this.telegramService.sendMessageToChatId(
+        await this.telegramHttpService.sendMessageToChatId(
+          chatId,
           previewMessage,
           data,
-          chatId,
         );
 
       this.logger.log(`Job ${id} done!`);

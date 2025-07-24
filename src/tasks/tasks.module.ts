@@ -5,14 +5,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ScraperService } from 'src/scraper/scraper.service';
 import { TasksProcessor } from './tasks.processor';
 import { TasksService } from './tasks.service';
-import { TelegramModule } from 'src/telegram/telegram.module';
+import { TelegramHttpService } from 'src/telegram/telegram-http.service';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'notifications',
     }),
-    TelegramModule,
   ],
   providers: [
     TasksService,
@@ -20,6 +19,7 @@ import { TelegramModule } from 'src/telegram/telegram.module';
     NotificationsService,
     PrismaService,
     TasksProcessor,
+    TelegramHttpService,
   ],
 })
 export class TasksModule {}

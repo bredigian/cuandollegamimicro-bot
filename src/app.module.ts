@@ -18,7 +18,7 @@ import { TelegramModule } from './telegram/telegram.module';
     ScheduleModule.forRoot(),
     BullModule.forRoot({
       redis: {
-        host: 'localhost',
+        host: '127.0.0.1',
         port: 6379,
         password: process.env.REDIS_PASSWORD,
       },

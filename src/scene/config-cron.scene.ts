@@ -17,6 +17,8 @@ import {
 } from 'src/utils/weekdays';
 import { isValidTime, Time } from 'src/utils/time';
 import { Logger } from '@nestjs/common';
+import { ScraperService } from 'src/scraper/scraper.service';
+import { BusArrivalData } from 'src/types/bus.types';
 
 type State = {
   chatId: string;
@@ -33,6 +35,7 @@ export class ConfigCronScene {
   constructor(
     private lineBusService: LineBusService,
     private notificationsService: NotificationsService,
+    private scraperService: ScraperService,
   ) {}
 
   @SceneEnter()
@@ -121,6 +124,30 @@ export class ConfigCronScene {
 
   @Action(/stop:(.+)/)
   async onStopSelected(@Ctx() ctx: SceneContext) {
+    const stop = (ctx.callbackQuery?.['data'] as string).split(':')[1];
+
+    const { line } = ctx.scene.session.state as Record<string, any>;
+
+    const busData = await this.scraperService.scrapeData({
+      lineCode: line.code,
+      stopId: stop,
+    });
+
+    if ('error' in busData[0]) return;
+
+    await ctx.reply(
+      `Este micro va en sentido hacia:\n\n${(busData as BusArrivalData[]).map((b) => b.description).join('\n')}\n\n¿Está bien? Si es así, presioná Continuar. Caso contrario, seleccioná otra parada.`,
+      Markup.inlineKeyboard([
+        Markup.button.callback('Continuar', `stopconfirm:${stop}`),
+      ]),
+    );
+    await ctx.answerCbQuery();
+
+    return;
+  }
+
+  @Action(/stopconfirm:(.+)/)
+  async onConfirmStop(@Ctx() ctx: SceneContext) {
     const stop = (ctx.callbackQuery?.['data'] as string).split(':')[1];
 
     await ctx.reply(

@@ -1,4 +1,5 @@
 import { BullModule } from '@nestjs/bull';
+import { MessagesService } from 'src/messages/messages.service';
 import { Module } from '@nestjs/common';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -25,6 +26,7 @@ import { TelegramHttpService } from 'src/telegram/telegram-http.service';
     PrismaService,
     TasksProcessor,
     TelegramHttpService,
+    MessagesService,
   ],
 })
 export class TasksModule {}

@@ -11,6 +11,7 @@ import { ScraperModule } from './scraper/scraper.module';
 import { ScraperService } from './scraper/scraper.service';
 import { TasksModule } from './tasks/tasks.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TelegramModule } from './telegram/telegram.module';
     TasksModule,
     LineBusModule,
     NotificationsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [ScraperService, NotificationsService, PrismaService],

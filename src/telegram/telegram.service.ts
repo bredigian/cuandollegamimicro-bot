@@ -46,6 +46,18 @@ export class TelegramService {
     }
   }
 
+  @Command('getinstantnotification')
+  async getInstantNotification(@Ctx() ctx: SceneContext) {
+    try {
+      await ctx.scene.enter('GET_INSTANT_NOTIFICATION_SCENE');
+    } catch (error) {
+      this.logger.error(
+        'An error occurred while initializing instant notification scene.',
+        error,
+      );
+    }
+  }
+
   @Command('enablenotification')
   async activeNotification(@Ctx() ctx: SceneContext) {
     try {

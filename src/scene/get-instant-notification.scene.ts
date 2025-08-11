@@ -123,7 +123,16 @@ export class GetInstantNotificationScene {
       stopId: stop,
     });
 
-    if ('error' in busData[0]) return;
+    if (!busData || 'error' in busData[0]) {
+      await ctx.reply(
+        busData?.[0].error ||
+          'No se pudieron obtener los datos del micro. Intenta nuevamente más tarde.',
+      );
+      await ctx.scene.leave();
+      await ctx.answerCbQuery();
+
+      return;
+    }
 
     await ctx.reply(
       `Este micro va en sentido hacia:\n\n${(busData as BusArrivalData[]).map((b) => b.description).join('\n')}\n\n¿Está bien? Si es así, presioná Continuar. Caso contrario, seleccioná otra parada.`,
@@ -147,6 +156,17 @@ export class GetInstantNotificationScene {
       lineCode: line.code,
       stopId: stop,
     });
+
+    if (!currentArrives || 'error' in currentArrives[0]) {
+      await ctx.reply(
+        currentArrives?.[0].error ||
+          'No se pudieron obtener los datos del micro. Intentá nuevamente más tarde.',
+      );
+      await ctx.scene.leave();
+      await ctx.answerCbQuery();
+
+      return;
+    }
 
     const stopName = this.stops.find((s) => s.code === stop)?.name;
 

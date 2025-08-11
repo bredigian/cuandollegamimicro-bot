@@ -26,6 +26,11 @@ export class TasksProcessor {
         stopId: stop.code,
       });
 
+      if (!data || 'error' in data[0]) {
+        this.logger.error(`Job ${id} failed!!!`);
+        throw new Error('Failed while scraping data.');
+      }
+
       const previewMessage = `⌛ Los próximos ${lineBus.name} que están por llegar a ${stop.name} (${stop.code}) son:`;
 
       for (const chatId of chats)

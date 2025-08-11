@@ -10,19 +10,19 @@ export class AppController {
     private readonly telegramService: TelegramService,
   ) {}
 
-  @Get()
-  async runScraper() {
-    try {
-      const [firstIncomingBus] = await this.scraperService.scrapeData({
-        lineCode: 169,
-        stopId: 'LP1438',
-      });
+  // @Get()
+  // async runScraper() {
+  //   try {
+  //     const [firstIncomingBus] = await this.scraperService.scrapeData({
+  //       lineCode: 169,
+  //       stopId: 'LP1438',
+  //     });
 
-      // await this.telegramService.sendMessageToSuscribers(firstIncomingBus);
+  //     // await this.telegramService.sendMessageToSuscribers(firstIncomingBus);
 
-      return firstIncomingBus;
-    } catch (error) {
-      throw error;
-    }
-  }
+  //     return firstIncomingBus;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 }

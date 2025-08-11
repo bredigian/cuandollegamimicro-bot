@@ -1,6 +1,7 @@
+import { Browser, chromium } from '@playwright/test';
+
 import { BusArrivalData } from 'src/types/bus.types';
 import { Injectable } from '@nestjs/common';
-import { chromium } from '@playwright/test';
 
 interface ScrapeDataProps {
   lineCode: number;
@@ -14,37 +15,52 @@ export class ScraperService {
   async scrapeData({
     lineCode,
     stopId,
-  }: ScrapeDataProps): Promise<BusArrivalData[] | { error: string }[]> {
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-
-    const URL = `${process.env.URL_TO_SCRAP!}?codLinea=${lineCode}&idParada=${stopId}`;
-
-    await page.goto(URL);
-
+  }: ScrapeDataProps): Promise<
+    BusArrivalData[] | { error: string }[] | undefined
+  > {
+    let browser: Promise<Browser> | Browser | null = null;
     try {
-      await page.waitForSelector('#arribosContainer', { timeout: 5000 });
-    } catch {
-      return [{ error: 'No se encontraron datos de arribos.' }];
-    }
+      browser = await chromium.launch({ headless: true });
+      const page = await browser.newPage();
 
-    const buses = await page.$$eval('.proximo-arribo', (rows) => {
-      return rows.map((row) => {
-        const line =
-          row.querySelector('.lineaClass')?.textContent?.trim() || '';
-        const description =
-          row.querySelector('.bandera')?.textContent?.trim() || '';
+      const URL = `${process.env.URL_TO_SCRAP!}?codLinea=${lineCode}&idParada=${stopId}`;
 
-        const remainingArrivalTime =
-          row.querySelector('#tiempoRestanteArribo')?.textContent?.trim() || '';
+      await page.goto(URL);
 
-        return { line, description, remainingArrivalTime };
+      try {
+        await page.waitForSelector('#arribosContainer', { timeout: 5000 });
+      } catch {
+        await browser.close();
+
+        return [{ error: 'No se encontraron datos de arribos.' }];
+      }
+
+      const buses = await page.$$eval('.proximo-arribo', (rows) => {
+        return rows.map((row) => {
+          const line =
+            row.querySelector('.lineaClass')?.textContent?.trim() || '';
+          const description =
+            row.querySelector('.bandera')?.textContent?.trim() || '';
+
+          const remainingArrivalTime =
+            row.querySelector('#tiempoRestanteArribo')?.textContent?.trim() ||
+            '';
+
+          return { line, description, remainingArrivalTime };
+        });
       });
-    });
 
-    await page.close();
-    await browser.close();
+      await page.close();
+      await browser.close();
 
-    return buses.slice(0, 4); // Limit to 4 buses
+      return buses.slice(0, 4); // Limit to 4 buses
+    } catch (error) {
+      console.error(
+        'Error scraping data or executing a browser instance:',
+        error,
+      );
+    } finally {
+      if (browser) await browser.close();
+    }
   }
 }

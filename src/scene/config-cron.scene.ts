@@ -133,14 +133,32 @@ export class ConfigCronScene {
       stopId: stop,
     });
 
-    if ('error' in busData[0]) return;
+    if (!busData) {
+      await ctx.reply(
+        'Ocurrió un error con la obtención de los datos del micro y no podemos continuar. Intentá nuevamente mas tarde.',
+      );
+      await ctx.scene.leave();
+      await ctx.answerCbQuery();
 
-    await ctx.reply(
-      `Este micro va en sentido hacia:\n\n${(busData as BusArrivalData[]).map((b) => b.description).join('\n')}\n\n¿Está bien? Si es así, presioná Continuar. Caso contrario, seleccioná otra parada.`,
-      Markup.inlineKeyboard([
-        Markup.button.callback('Continuar', `stopconfirm:${stop}`),
-      ]),
-    );
+      return;
+    }
+
+    if ('error' in busData[0]) {
+      await ctx.reply(
+        `En este momento, no puedo obtener información de la parada que seleccionaste, pero de todos modos podemos continuar. Confirmá si querés continuar.`,
+        Markup.inlineKeyboard([
+          Markup.button.callback('Continuar', `stopconfirm:${stop}`),
+        ]),
+      );
+    } else {
+      await ctx.reply(
+        `Este micro va en sentido hacia:\n\n${(busData as BusArrivalData[]).map((b) => b.description).join('\n')}\n\n¿Está bien? Si es así, presioná Continuar. Caso contrario, seleccioná otra parada.`,
+        Markup.inlineKeyboard([
+          Markup.button.callback('Continuar', `stopconfirm:${stop}`),
+        ]),
+      );
+    }
+
     await ctx.answerCbQuery();
 
     return;
